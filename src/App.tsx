@@ -1,25 +1,24 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { Canvas } from "react-three-fiber";
+import { Suspense } from "react";
+import { Stats, Html, OrbitControls } from "@react-three/drei";
+import Scene from "./Scene.js";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Canvas concurrent pixelRatio={[1, 2]} camera={{ position: [0, 5, 5] }}>
+      <Stats />
+      <ambientLight />
+      <OrbitControls enableZoom={false} />
+      <Suspense
+        fallback={
+          <Html>
+            <div>Loading...</div>
+          </Html>
+        }
+      >
+        <Scene />
+      </Suspense>
+    </Canvas>
   );
 }
 
