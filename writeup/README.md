@@ -96,7 +96,7 @@ I also managed to reclaim some texture space by scaling down shapes invisible to
 
 ### Final image and postprocessing
 
-For the final lightmap I used `4096x4096` texture with `4px` margins (that value seems too low now as there is noticeable bleeding of black background on door handle, desk lamp arm and bookcase).
+For the final lightmap I used `4096x4096` texture with `4px` margins (that value seems too low now as there is noticeable bleeding of black background on door handle, desk lamp arm and bookcase) and 128 samples.
 
 Invaluable help came from this [denoising trick](https://www.youtube.com/watch?v=lJbGR0Jnd0k) that drastically improved quality of the texture. It came with a cost of calmer and colder lights that I mitigated by postprocessing the texture in GIMP. In future I will try to stick to Blender node compositor to make it replicable.
 
