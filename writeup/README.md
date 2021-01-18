@@ -2,6 +2,9 @@
 
 Recently a [tweet](https://twitter.com/arturitu/status/1348167088628760576) from [@arturitu](https://twitter.com/arturitu) inspired me to try light baking for making beautiful Three.js scenes and here's a walkthrough of problems I found on my way there.
 
+[CodeSandbox](https://codesandbox.io/s/baked-l3jtj) · [Twitter thread](https://twitter.com/tchayen/status/1351174072823140355)
+
+
 ![Screenshot of the scene](screenshot.png)
 
 ## Model preparation
@@ -126,6 +129,10 @@ For moving the scene to Three.js I used `npx gltfjsx` command to generate a `rea
 
 When exporting `*.glb` file, I had to stick to the default `Principled BSDF` node with texture applied and then I had to make sure I am not exporting vertex colors. Otherwise material configuration would lead to black mesh instead of the expected texture.
 
+### Outline on hover
+
+_I will update it here once I get good enough performance on it. WIP._
+
 ## Conclusion
 
 The effect is surprisingly powerful. Baked lighting creates amazing and mostly lightweight to render scenes. In the end I am able to join all meshes in the scene into one (I am not doing it for the hover effects that I am exploring though).
@@ -141,3 +148,5 @@ Is it a bad thing though? Absolutely not! I didn't plan to move any of my object
 Even though this scene will remain mostly static, it doesn't mean there's no way to go from here. I started with adding hover outline effect (as seen in the first screenshot) and I am currently working on optimizing that.
 
 From there it can go either in direction of some interactive storytelling/RPG game or become a furniture shop website (IKEA experience of the future). In that case AR might come in handy to allow user to try out a carpet in their own room. And in both cases VR will be a nice addition.
+
+If you enjoyed reading it and would like to see more similar content in the future – you can follow me on [Twitter](https://twitter.com/tchayen)!
