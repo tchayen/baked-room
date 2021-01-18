@@ -1,6 +1,6 @@
-# IKEA of the future
+# Baked lighting in r3f
 
-Recently a [tweet](https://twitter.com/arturitu/status/1348167088628760576) from [@arturitu](https://twitter.com/arturitu) inspired me to try light baking for making beautiful Three.js scenes and here's a walkthrough of things I had to get through.
+Recently a [tweet](https://twitter.com/arturitu/status/1348167088628760576) from [@arturitu](https://twitter.com/arturitu) inspired me to try light baking for making beautiful Three.js scenes and here's a walkthrough of problems I found on my way there.
 
 ![Screenshot of the scene](screenshot.png)
 
@@ -44,30 +44,32 @@ What was very handy was this [tip how to turn instances to meshes](https://devta
 
 ## Baking light
 
-Baking light is possible using `Cycles` engine. The idea is to capture ray traced light in the textures and use them later to achieve amazing offline-quality lighting with the cost of rendering just the textured meshes.
+Baking light is possible using `Cycles` engine. The idea is to capture ray traced light in the textures and use them later to achieve amazing offline-quality lighting with the cost of rendering just the textured meshes (which is much less demanding on GPU).
 
-Some people like to keep different diffuse (the colors) and lightmap textures, but I used the `Combined` setting and included everything in one. It also allowed me to remove all materials as they served no purpose after baking light effects into textures.
+Some people like to keep different diffuse (the colors) and lightmap (how different surfaces are lit) textures, but I used the `Combined` setting and included everything in one. It also allowed me to remove all materials as they served no purpose after baking.
 
 ### UVs
 
-In order to do the baking, set each material's UV maps in the following way (default one is rendered, a new, `Bake`, is selected):
+In order to do the baking, I set each material's UV maps in the following way (default one is rendered, a new, `Bake`, is selected):
 
 ![UV setup](uv-maps.png)
+
+This was very tedious and repetitive work to go through all objects like this and I am looking forward to automating it with some plugin in the future.
 
 ### Shaders
 
 Create a new image (for example in the UV editor mode) of size `4096x4096` with no alpha.
-In shader editor add a new `Image Texture` pointing to that image. Apply for each material.
+In shader editor add a new `Image Texture` pointing to that image. Apply for each material. Make sure that the texture node is active by pressing it (white border).
 
 ![Shader nodes setup](shaders.png)
 
-Select all meshes from the _meshes_ collection (refer to number _4_ in the list above), go to edit mode, unwrap the mesh.
+Select all relevant meshes (I use a helper collection for this as in 4. in the list above), go to edit mode, unwrap the mesh.
 
-I used [UVPackmaster 2](https://gumroad.com/l/uvpackmaster2) for extra quality of the UV map but that can be skipped.
+I used [UVPackmaster 2](https://gumroad.com/l/uvpackmaster2) for extra quality of the UV map packing but that should not be necessary.
 
 ### Test run
 
-Most important time and frustration saving tip I can give based on my experience is to do a test run of the baking. This is a very wild and unintuitive (at least in the beginning) procedure and sometimes required unexplained restarts of Blender for some things to start working.
+Most important tip for saving time and avoiding frustration I can give based on my experience is to do a test run of the baking. This is a very wild and unintuitive (at least in the beginning) procedure and sometimes required unexplained restarts of Blender for some things to start working.
 
 Also test run is the place to find out about all issues in the meshes and the moment when incorrect normals show up as black texture parts.
 
@@ -75,19 +77,23 @@ I suggest going for the lowest quality of 1 sample and maybe even smaller image 
 
 ![Bake](bake.png)
 
-You can also try increasing the sampling rate a bit to evaluate quality of textures on different objects. I have noticed really poor quality of the floor and some objects that I mitigated by scaling up their UV faces and recalculating UV packing again.
+You can also try increasing the sampling rate a bit (for example to 10) to evaluate quality of textures on different objects. I experienced poor quality of floor and some object like bin tray or chair. I mitigated it by scaling up their UV faces and recalculating UV pack.
 
-Also scaled down a lot size of invisible shapes like bottom side of the table or bottom face of the floor. It gave back some texture space that was available for scaling up walls and floor more.
+Image below shows not only noise but also very inconsistent resolution that was calculated for different meshes by the UV unwrapping.
+
+![Inconsistent quality](inconsistent.png)
+
+I also managed to reclaim some texture space by scaling down shapes invisible to viewer like bottom side of the table, chair or floor.
 
 ### Final image and postprocessing
 
-For the final lightmap I used `4096x4096` texture with `4px` margins (that value seems too low now as there is noticeable bleeding of black background on some objects).
+For the final lightmap I used `4096x4096` texture with `4px` margins (that value seems too low now as there is noticeable bleeding of black background on door handle, desk lamp arm and bookcase).
 
-Invaluable help came from this [denoising trick](https://www.youtube.com/watch?v=lJbGR0Jnd0k) that drastically improved quality of the texture (with a cost of colder lights).
+Invaluable help came from this [denoising trick](https://www.youtube.com/watch?v=lJbGR0Jnd0k) that drastically improved quality of the texture. It came with a cost of calmer and colder lights that I mitigated by postprocessing the texture in GIMP. In future I will try to stick to Blender node compositor to make it replicable.
 
 ![Comparison of before and after denoising](before-after.png)
 
-This is how the whole scene looks with freshly baked texture vs how it looks after denoizing and some color grading postprocessing.
+This is how the whole scene looks with freshly baked texture vs how it looks after denoising and some color grading postprocessing.
 
 ![Comparison of baked texture and final](baked-vs-final.png)
 
@@ -112,13 +118,17 @@ For moving the scene to Three.js I used `npx gltfjsx` command to generate a `rea
 </Canvas>
 ```
 
-When exporting `*.glb` file, I had to stick to the default `Principled BSDF` node with texture applied and then I had to make sure I am not exporting vertex colors. Otherwise material configuration would lead to black mesh instead of the texture color.
+When exporting `*.glb` file, I had to stick to the default `Principled BSDF` node with texture applied and then I had to make sure I am not exporting vertex colors. Otherwise material configuration would lead to black mesh instead of the expected texture.
 
-## Summary
+## Conclusion
 
 The effect is surprisingly powerful. Baked lighting creates amazing and mostly lightweight to render scenes. In the end I am able to join all meshes in the scene into one (I am not doing it for the hover effects that I am exploring though).
 
-Although it has many limitations, such as in this configuration no object can move because the shadow it casts will stay in the same place. Also adding any dynamic lights to the scene is impossible as they will not be able to match the quality and there will be no information to recalculate based on the previous amount of light received by given pixel. It is possible to work with those limitations by not relying fully on the baked lighting, but that thing is much more tricky and should be approached carefully. Simply put: with baked lights, scene should remain mostly static.
+This technique comes with some limitations. In my case no object can move because the shadow it casts is baked into textures of surrounding objects. As you can see, the red box on the shelf must stay there forever:
+
+![Missing object](missing.png)
+
+Is it a bad thing though? Absolutely not! I didn't plan to move any of my objects so this is perfectly fine for me and the added quality comes with no disadvantages. But it should be considered that it's not always the case.
 
 ## Next steps
 
