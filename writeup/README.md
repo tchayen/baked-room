@@ -23,6 +23,12 @@ I used it to achieve interesting effects on larger surfaces like curtains and ca
 
 I have used `Wave` modifier as described in the [How to model realistic curtains in Blender](https://www.youtube.com/watch?v=lHIBQBSdfjA) tutorial.
 
+### Making walls disappear when rotating
+
+For this I have used the oldest and simplest trick we got for it – backface culling. I enabled it for the wall material (it turned out sufficient for the viewing while enabling it for other shapes made them look very weird from behind).
+
+glTF and Three.js support it well, so I didn't have to worry about it during later steps.
+
 ### Curves
 
 Using paths was important for achieving precision in some parts of the model. I have used similar technique to presented in [Pivot Desk Lamp](https://www.youtube.com/watch?v=q5lmw_T8Ep4) to achieve the lamp arm.
