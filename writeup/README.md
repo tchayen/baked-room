@@ -1,6 +1,6 @@
 # IKEA of the future
 
-Recently I was learning how to make this kind of beatiful scene in Three.js, utilizing light baking in Blender.
+Recently a [tweet](https://twitter.com/arturitu/status/1348167088628760576) from [@arturitu](https://twitter.com/arturitu) inspired me to try light baking for making beautiful Three.js scenes and here's a walkthrough of things I had to get through.
 
 ![Screenshot of the scene](screenshot.png)
 
@@ -8,7 +8,7 @@ Recently I was learning how to make this kind of beatiful scene in Three.js, uti
 
 Workflow was similar to how I would approach regular mid-poly scene. I didn't want to fall into low poly style, but also made sure that circular shapes like lamps won't get too heavy.
 
-![Object view](objectview.png)
+![Object view](object-view.png)
 
 ### Texturing
 I started with solid colors, but later enhanced it with a technique called [Lazy Unwrapping](https://www.youtube.com/watch?v=DD84GSJiTVc). It's basically all about finding out what group of vertices should have one end of the gradient and what the other.
@@ -38,6 +38,7 @@ I have no idea whether those steps are fully needed, but what I found particular
 2. Materializing curves (like lamp arm or decoration light cables).
 3. Fixing normals. Blender is really forgiving in the object or even material mode about normals that go in wrong direction. Baking is not like that in any way. Broken objects were easy to identify as they turned out black or mostly black in the rendered texture.
 4. I divided my scene into two collections: _Lights/emmision meshes_ and _meshes_.
+5. I went through all objects to apply scale and rotation.
 
 What was very handy was this [tip how to turn instances to meshes](https://devtalk.blender.org/t/elegant-way-to-turn-a-collection-instance-to-a-mesh/8803/11) which helped me with the instanced lamps.
 
@@ -51,7 +52,7 @@ Some people like to keep different diffuse (the colors) and lightmap textures, b
 
 In order to do the baking, set each material's UV maps in the following way (default one is rendered, a new, `Bake`, is selected):
 
-![UV setup](bakeuv.png)
+![UV setup](uv-maps.png)
 
 ### Shaders
 
@@ -84,12 +85,43 @@ For the final lightmap I used `4096x4096` texture with `4px` margins (that value
 
 Invaluable help came from this [denoising trick](https://www.youtube.com/watch?v=lJbGR0Jnd0k) that drastically improved quality of the texture (with a cost of colder lights).
 
-![TODO comparison before after denoising]()
+![Comparison of before and after denoising](before-after.png)
+
+This is how the whole scene looks with freshly baked texture vs how it looks after denoizing and some color grading postprocessing.
+
+![Comparison of baked texture and final](baked-vs-final.png)
 
 ## Three.js setup
 
-TODO
+For moving the scene to Three.js I used `npx gltfjsx` command to generate a `react-three-fiber` scene definition. Then I did basic canvas setup:
+
+```jsx
+<Canvas concurrent pixelRatio={[1, 2]} camera={{ position: [0, 4, 4] }}>
+  <Stats />
+  <ambientLight />
+  <OrbitControls enableZoom={false} />
+  <Suspense
+    fallback={
+      <Html>
+        <div>Loading...</div>
+      </Html>
+    }
+  >
+    <Scene />
+  </Suspense>
+</Canvas>
+```
+
+When exporting `*.glb` file, I had to stick to the default `Principled BSDF` node with texture applied and then I had to make sure I am not exporting vertex colors. Otherwise material configuration would lead to black mesh instead of the texture color.
 
 ## Summary
 
-TODO
+The effect is surprisingly powerful. Baked lighting creates amazing and mostly lightweight to render scenes. In the end I am able to join all meshes in the scene into one (I am not doing it for the hover effects that I am exploring though).
+
+Although it has many limitations, such as in this configuration no object can move because the shadow it casts will stay in the same place. Also adding any dynamic lights to the scene is impossible as they will not be able to match the quality and there will be no information to recalculate based on the previous amount of light received by given pixel. It is possible to work with those limitations by not relying fully on the baked lighting, but that thing is much more tricky and should be approached carefully. Simply put: with baked lights, scene should remain mostly static.
+
+## Next steps
+
+Even though this scene will remain mostly static, it doesn't mean there's no way to go from here. I started with adding hover outline effect (as seen in the first screenshot) and I am currently working on optimizing that.
+
+From there it can go either in direction of some interactive storytelling/RPG game or become a furniture shop website (IKEA experience of the future). In that case AR might come in handy to allow user to try out a carpet in their own room. And in both cases VR will be a nice addition.
